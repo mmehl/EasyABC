@@ -71,6 +71,7 @@ else:
         if wx.Platform == "__WXMSW__":
             cwd = cwd.replace('/', '\\')
 sys.path.append(cwd)
+logging.debug("cwd: %s",cwd)
 
 import re
 import subprocess
@@ -3656,7 +3657,7 @@ class MainFrame(wx.Frame):
             icon = wx.Icon(exeName + ";0", wx.BITMAP_TYPE_ICO)
             self.SetIcon(icon)
         else:
-            icon = wx.Icon("img/logo.ico", wx.BITMAP_TYPE_ICO)
+            icon = wx.Icon(cwd+"/img/logo.ico", wx.BITMAP_TYPE_ICO)
             self.SetIcon(icon)
         global execmessages, visible_abc_code
         self.settings = settings
