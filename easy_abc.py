@@ -59,6 +59,7 @@ else:
 import os, os.path
 import wx
 WX4 = wx.version().startswith('4')
+logging.debug("wx version %s",wx.version())
 
 if os.getenv('EASYABCDIR'):
     cwd = os.getenv('EASYABCDIR')
@@ -3654,6 +3655,9 @@ class MainFrame(wx.Frame):
             exeName = win32api.GetModuleFileName(win32api.GetModuleHandle(None))
             icon = wx.Icon(exeName + ";0", wx.BITMAP_TYPE_ICO)
             self.SetIcon(icon)
+        else:
+            icon = wx.Icon("img/logo.ico", wx.BITMAP_TYPE_ICO)
+            self.SetIcon(icon)
         global execmessages, visible_abc_code
         self.settings = settings
         self.current_svg_tune = None # 1.3.6.2 [JWdJ] 2015-02
@@ -4533,7 +4537,7 @@ class MainFrame(wx.Frame):
         directions = self.toolbar.AddSimpleTool(self.id_directions, "", wx.Image(os.path.join(cwd, 'img', 'toolbar_directions.png')).ConvertToBitmap(), _('Directions'))
         self.toolbar.AddSeparator()
 
-        self.zoom_slider = self.add_slider_to_toolbar(_('Zoom'), False, 1000, 500, 3000, (30, 60), (130, 22))
+        self.zoom_slider = self.add_slider_to_toolbar(_('Zoom'), False, value=1000, minValue=500, maxValue=3000, size=(130, -1))
         wx_slider_set_tick_freq(self.zoom_slider, 10)
         self.Bind(wx.EVT_SLIDER, self.OnZoomSlider, self.zoom_slider)
         self.zoom_slider.Bind(wx.EVT_LEFT_DOWN, self.OnZoomSliderClick)
@@ -4544,17 +4548,17 @@ class MainFrame(wx.Frame):
             self.cur_page_combo.Select(0)
         self.Bind(wx.EVT_COMBOBOX, self.OnPageSelected, self.cur_page_combo)
         # 1.3.6.3 [SS] 2015-05-03
-        self.bpm_slider = self.add_slider_to_toolbar(_('Tempo'), False, 0, -100, 100, (-1, -1), (130, 22))
+        self.bpm_slider = self.add_slider_to_toolbar(_('Tempo'), False, value=0, minValue=-100, maxValue=100, size=(130, -1))
         if wx.Platform == "__WXMSW__":
             self.bpm_slider.SetTick(0)  # place a tick in the middle for neutral tempo
-        self.progress_slider = self.add_slider_to_toolbar(_('Play position'), False, 0, 0, 100, (-1, -1), (130, 22))
+        self.progress_slider = self.add_slider_to_toolbar(_('Play position'), False, value=0, minValue=0, maxValue=100, size=(130, -1))
 
         self.loop_check = self.add_checkbox_to_toolbar(_('Loop'))
 
         self.follow_score_check = self.add_checkbox_to_toolbar(_('Follow score'))
         self.follow_score_check.Bind(wx.EVT_CHECKBOX, self.OnChangeFollowScore)
 
-        self.timing_slider = self.add_slider_to_toolbar('', False, 0, -1000, 1000, (-1, -1), (130, 22))
+        self.timing_slider = self.add_slider_to_toolbar('', False, value=0, minValue=-1000, maxValue=1000, size=(130, -1))
         self.timing_slider.Bind(wx.EVT_SLIDER, self.OnChangeTiming)
         self.timing_slider.Bind(wx.EVT_LEFT_DOWN, self.OnTimingSliderClick)
 
@@ -4584,8 +4588,8 @@ class MainFrame(wx.Frame):
                             ToolbarPane().Top().Floatable(True).Dockable(False))
 
     def add_slider_to_toolbar(self, label_text, show_value, *args, **kwargs):
-        panel = wx.Panel(self.toolbar, -1)
-        controls = [wx.Slider(panel, -1, *args, **kwargs)]
+        panel = wx.Panel(self.toolbar, wx.ID_ANY)
+        controls = [wx.Slider(panel, wx.ID_ANY, *args, **kwargs)]
         if show_value:
             controls.append(wx.StaticText(panel, -1, str(kwargs['value'])))
         self.add_label_and_controls_to_panel(panel, label_text, controls)
