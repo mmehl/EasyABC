@@ -307,7 +307,7 @@ class ValueChangeAction(AbcAction):
                 t = UrlTuple(self.get_action_url(params), desc)
                 columns.append(t)
             else:
-                columns.append(desc) # self.html_selected_item(context, value, desc)
+                columns.append(self.html_selected_item(context, value, desc))
 
         return columns
 
@@ -340,10 +340,9 @@ class ValueChangeAction(AbcAction):
             result = ''
         return result
 
-    @staticmethod
-    def html_selected_item(context, value, description):
-        # if self.is_current_value(context, value):
-        #    return html_enclose('b', description)  # to make selected item bold
+    def html_selected_item(self, context, value, description):
+        if self.is_current_value(context, value):
+            return description + ' \u25C4'
         return description
 
 
@@ -651,7 +650,7 @@ class DurationAction(ValueChangeAction):
 
     @staticmethod
     def is_power2(num):
-        return ((num & (num - 1)) == 0) and num != 0
+        return ((num & (num - 1)) == 0) and num > 0
 
     def can_execute(self, context, params=None):
         value = params.get('value')
@@ -883,6 +882,9 @@ class KeyChangeAction(ValueChangeAction):
         mode = mode[:3].lower()
         return KeyChangeAction._mode_to_num.get(mode, default)
 
+    def is_current_value(self, context, value):
+        return True
+
 
 class KeySignatureChangeAction(KeyChangeAction):
     values = [
@@ -1029,8 +1031,7 @@ class ClefChangeAction(ValueChangeAction):
             value = params.get('value')
             if value is None:
                 return True
-            match = self.get_match(context)
-            return match is None or value != match.group('clefname')
+            return not self.is_current_value(context, value)
         return False
 
     def execute(self, context, params=None):
@@ -1044,6 +1045,10 @@ class ClefChangeAction(ValueChangeAction):
                 if value:
                     params['value'] = ' clef=' + value
                 super(ClefChangeAction, self).execute(context, params)
+
+    def is_current_value(self, context, value):
+        match = self.get_match(context)
+        return value == (match.group('clefname') or '')
 
 
 class StaffTransposeChangeAction(ValueChangeAction):
@@ -1290,23 +1295,27 @@ class Abcm2psUrlAction(UrlAction):
         url = 'http://moinejf.free.fr/abcm2ps-doc/{0}.xhtml'.format(urllib.parse.quote(keyword))
         super(UrlAction, self).__init__('lookup_abcm2ps', url)
 
-
 class Abc2MidiUrlAction(UrlAction):
     def __init__(self, keyword):
-        url = 'http://ifdo.pugmarks.com/~seymour/runabc/abcguide/abc2midi_body.html#{0}'.format(urllib.parse.quote(keyword))
+        url = 'https://abcmidi.sourceforge.io/#{0}'.format(urllib.parse.quote(keyword))
         super(UrlAction, self).__init__('lookup_abc2midi', url)
+
 
 class AbcStandardUrlAction(UrlAction):
     def __init__(self):
         super(AbcStandardUrlAction, self).__init__('lookup_abc_standard')
 
     def get_url(self, context):
-        version = context.get_matchgroup('version', '2.1')
+        version = self.get_version_from_context(context)
         return 'http://abcnotation.com/wiki/abc:standard:v{0}'.format(version)
 
     def can_execute(self, context, params=None):
-        version = context.get_matchgroup('version', '2.1')
+        version = self.get_version_from_context(context)
         return version.startswith('2.')
+
+    @staticmethod
+    def get_version_from_context(context):
+        return context.get_matchgroup('version', '2.1')
 
     def get_outer_text(self, context):
         return None
@@ -1355,23 +1364,21 @@ class NewMultiVoiceTuneAction(NewTuneAction):
         super(NewTuneAction, self).__init__('new_multivoice_tune', display_name=_('New tune with multiple voices'))
 
     def key_and_body(self):
-        text =               'V:S clef=treble name=S'
-        text += os.linesep + 'V:A clef=treble name=A'
-        text += os.linesep + 'V:T clef=treble name=T'
-        text += os.linesep + 'V:B clef=treble name=B'
-        text += os.linesep + r'%%score [ (S A) (T B) ]'
-        text += os.linesep + 'K:C'
-        text += os.linesep + r'% ' + _('below the notes for each voice')
-        text += os.linesep + 'V:S'
-        text += os.linesep + 'c'
-        text += os.linesep + 'V:A'
-        text += os.linesep + 'G'
-        text += os.linesep + 'V:T'
-        text += os.linesep + 'E'
-        text += os.linesep + 'V:B'
-        text += os.linesep + 'C'
-        return text
-
+        return '''V:S clef=treble name=S
+V:A clef=treble name=A
+V:T clef=bass name=T
+V:B clef=bass name=B
+%%score [ (S A) (T B) ]
+K:C
+V:S
+c
+V:A
+G
+V:T
+G,
+V:B
+C,
+'''
 
 class NewVoiceAction(AbcAction):
     voice_re = re.compile(r'(?m)^V:\s*(\d+)')
