@@ -160,7 +160,7 @@ except ImportError:
     try:
         import pypm
     except ImportError:
-        sys.stderr.write('Warning: pygame/pypm module not found. Recording midi will not work')
+        logging.warning('Warning: pygame/pypm module not found. Recording midi will not work')
 finally:
     sys.stdout = old_stdout
 
@@ -3740,6 +3740,7 @@ class MainFrame(wx.Frame):
             except NotImplementedError:
               self.mc = DummyMidiPlayer()  # if media player not supported on this platform
 
+        # TODO: OnAfterLoad and OnAfterStop are not yet available for FluidSynthPlayer
         self.mc.OnAfterLoad += self.OnMediaLoaded
         self.mc.OnAfterStop += self.OnAfterStop
         # self.media_file_loaded = False
@@ -8407,6 +8408,7 @@ class MyApp(wx.App):
         self.SetAppName('EasyABC')
         #wx.SystemOptions.SetOptionInt('msw.window.no-clip-children', 1)
         app_dir = self.app_dir = wx.StandardPaths.Get().GetUserLocalDataDir()
+        logging.debug("app_dir %s",app_dir)
         if not os.path.exists(app_dir):
             os.mkdir(app_dir)
         cache_dir = os.path.join(app_dir, 'cache')
