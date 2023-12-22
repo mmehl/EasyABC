@@ -9,8 +9,8 @@ remove_non_notes = re.compile(r'(?xm)' + '|'.join([
                r'\%\%beginps(.|\s)+?\%\%endps',  # remove embedded postscript
                r'\%\%begintext(.|\s)+?\%\%endtext',   # remove text
                r'\[\w:.*?\]',    # remove embedded fields
-               r'(?m)^\w:.*?$',  # remove normal fields
-               r'(?m)%.*$',      # remove comments
+               r'^\w:.*?$',      # remove normal fields
+               r'%.*$',          # remove comments
                r'\[\w:.*?\]',    # remove embedded fields
                r'\\"',           # remove escaped " characters
                r'".*?"',         # remove strings
